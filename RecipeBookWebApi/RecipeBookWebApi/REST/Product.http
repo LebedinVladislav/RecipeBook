@@ -1,0 +1,47 @@
+@HostAddress = http://localhost:5265
+
+### Create a product
+GET {{HostAddress}}/api/products?sortby=fats
+Accept: application/json
+
+### Create a product
+POST {{HostAddress}}/api/products
+Content-Type: application/json
+
+
+{
+    "name": "Tomato",
+    "photos": [
+        "assets/product_photos/tomato.jfif"
+    ],
+    "calories": 20,
+    "proteins": 1,
+    "fats": 0,
+    "carbs": 4,
+    "category": "Овощи",
+    "flags": "Веган",
+    "cookingRequired": "ГотовыйКУпотреблению"
+}
+
+{
+    "name": "SuperProduct",
+    "photos": [],
+    "calories": 3000,
+    "proteins": 100,
+    "fats": 0,
+    "carbs": 0,
+    "category": "Мясо",
+    "cookingRequired": "ТребуетПриготовления"
+}
+
+{
+  "name": "test product",
+  "calories": 500,
+  "proteins": 5,
+  "fats": 5,
+  "carbs": 5,
+  "composition": "qwerty",
+  "category": "Сладости",
+  "cookingRequired": "ГотовыйКУпотреблению",
+  "flags": "Веган"
+}

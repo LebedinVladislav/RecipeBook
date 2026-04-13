@@ -1,0 +1,33 @@
+@HostAddress = http://localhost:5265
+
+### Get all dishes
+GET {{HostAddress}}/api/dishes
+Accept: application/json
+
+### Delete a dish
+DELETE {{HostAddress}}/api/dishes/4
+Accept: application/json
+
+### Create a dish
+POST {{HostAddress}}/api/dishes
+Content-Type: application/json
+
+{
+  "name": "Салат с томатами",
+  "photos": [
+    "salad.jpg"
+  ],
+  "calories": 25,
+  "proteins": 1,
+  "fats": 0,
+  "carbs": 5,
+  "ingredients": [
+    {
+      "productId": 4,
+      "quantity": 100
+    }
+  ],
+  "portionSize": 100,
+  "category": "Салат",
+  "flags": "Веган"
+}
