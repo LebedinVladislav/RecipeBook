@@ -51,7 +51,6 @@ public class DishService : IDishService
             PortionSize = data.PortionSize ?? 0.1,
             Flags = data.Flags,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
         };
 
         if (data.Category.HasValue)
@@ -75,7 +74,6 @@ public class DishService : IDishService
         dish.Carbs = data.Carbs ?? carbs;
         
         ValidateDishNutrition(dish);
-        // ValidatePortionSize(dish);
         UpdateFlags(dish);
 
         _context.Dishes.Add(dish);

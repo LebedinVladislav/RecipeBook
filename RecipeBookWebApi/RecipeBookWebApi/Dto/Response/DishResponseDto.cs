@@ -29,5 +29,5 @@ public class DishResponseDto
 
     public DateTime CreatedAt { get; set; }
     
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

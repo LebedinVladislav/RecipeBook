@@ -16,5 +16,5 @@ public class ProductResponseDto
     public CookingRequired CookingRequired { get; set; }
     public ProductFlags Flags { get; set; } = ProductFlags.None;
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
