@@ -99,6 +99,30 @@ public class ProductService : IProductService
         ValidateProductNutrition(product);
 
         await _context.SaveChangesAsync();
+
+        // Recalculate flags for dishes using this product
+        var dishesToUpdate = await _context.Dishes
+            .Include(d => d.Ingredients)
+            .ThenInclude(i => i.Product)
+            .Where(d => d.Ingredients.Any(i => i.ProductId == id))
+            .ToListAsync();
+
+        foreach (var dish in dishesToUpdate)
+        {
+            // Only remove flags that are no longer valid based on ingredients
+            if (dish.Ingredients.Any(i => !i.Product.Flags.HasFlag(ProductFlags.Веган)))
+                dish.Flags &= ~DishFlags.Веган;
+            if (dish.Ingredients.Any(i => !i.Product.Flags.HasFlag(ProductFlags.БезГлютена)))
+                dish.Flags &= ~DishFlags.БезГлютена;
+            if (dish.Ingredients.Any(i => !i.Product.Flags.HasFlag(ProductFlags.БезСахара)))
+                dish.Flags &= ~DishFlags.БезСахара;
+            dish.UpdatedAt = DateTime.UtcNow;
+        }
+
+        if (dishesToUpdate.Any())
+        {
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task DeleteProductAsync(int id)
