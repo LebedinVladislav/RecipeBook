@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RecipeBookWebApi.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1f068a6a32d2902c5627b915bce5f9a6116c274f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6ca557b9cb4271a4ab5d6b2d4b1e061ed6183343")]
 [assembly: System.Reflection.AssemblyProductAttribute("RecipeBookWebApi.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RecipeBookWebApi.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -138,7 +138,6 @@ public class DishService : IDishService
         dish.Carbs = data.Carbs ?? carbs;
         
         ValidateDishNutrition(dish);
-        // ValidatePortionSize(dish);
         UpdateFlags(dish);
 
         var outdatedIngredients = _context.DishIngredients.Where(di => di.DishId == id);
@@ -297,10 +296,10 @@ public class DishService : IDishService
         }
 
         return (
-            Math.Round(totalCalories, 1),
-            Math.Round(totalProteins, 1),
-            Math.Round(totalFats, 1),
-            Math.Round(totalCarbs, 1)
+            Math.Round(totalCalories, 1, MidpointRounding.AwayFromZero),
+            Math.Round(totalProteins, 1, MidpointRounding.AwayFromZero),
+            Math.Round(totalFats, 1, MidpointRounding.AwayFromZero),
+            Math.Round(totalCarbs, 1, MidpointRounding.AwayFromZero)
         );
     }
 }

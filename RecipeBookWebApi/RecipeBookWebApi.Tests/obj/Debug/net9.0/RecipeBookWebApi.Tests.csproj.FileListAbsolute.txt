@@ -128,3 +128,4 @@ D:\VS Code\RecipeBook\RecipeBookWebApi\RecipeBookWebApi.Tests\obj\Debug\net9.0\r
 D:\VS Code\RecipeBook\RecipeBookWebApi\RecipeBookWebApi.Tests\obj\Debug\net9.0\RecipeBookWebApi.Tests.pdb
 D:\VS Code\RecipeBook\RecipeBookWebApi\RecipeBookWebApi.Tests\obj\Debug\net9.0\RecipeBookWebApi.Tests.genruntimeconfig.cache
 D:\VS Code\RecipeBook\RecipeBookWebApi\RecipeBookWebApi.Tests\obj\Debug\net9.0\ref\RecipeBookWebApi.Tests.dll
+D:\VS Code\RecipeBook\RecipeBookWebApi\RecipeBookWebApi.Tests\obj\Debug\net9.0\RecipeBookWebApi.Tests.sourcelink.json

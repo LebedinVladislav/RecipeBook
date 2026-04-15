@@ -1,19 +1,20 @@
 using Moq;
 using RecipeBookWebApi.Data;
 using RecipeBookWebApi.Dto;
+using RecipeBookWebApi.Migrations;
 using RecipeBookWebApi.Models;
 using RecipeBookWebApi.Services;
 
 namespace RecipeBookWebApi.Tests;
 
 
-public class DishServiceTests
+public class CalculateNutritionTests
 {
     private readonly RecipeBookContext _context;
     private readonly Mock<IProductService> _mockProductService;
     private readonly DishService _dishService;
 
-    public DishServiceTests()
+    public CalculateNutritionTests()
     {
         _context = new RecipeBookContext();
         _mockProductService = new Mock<IProductService>();
@@ -37,7 +38,7 @@ public class DishServiceTests
 
         _mockProductService.Setup(ps => ps.GetProductByIdAsync(1)).ReturnsAsync(product);
 
-        var request = new NutritionCalculateRequestDto
+        var data = new NutritionCalculateRequestDto
         {
             Ingredients = new List<DishIngredientDto>
             {
@@ -46,18 +47,18 @@ public class DishServiceTests
         };
 
         // Act
-        var result = await _dishService.CalculateNutritionAsync(request);
+        var result = await _dishService.CalculateNutritionAsync(data);
 
         // Assert
-        Assert.Equal(27, result.Calories);
-        Assert.Equal(1.35, result.Proteins);
-        Assert.Equal(0.3, result.Fats);
-        Assert.Equal(5.85, result.Carbs);
+        Assert.Equal(27, result.Calories); // 18 * 1.5
+        Assert.Equal(1.4, result.Proteins); // 0.9 * 1.5
+        Assert.Equal(0.3, result.Fats); // 0.2 * 1.5
+        Assert.Equal(5.9, result.Carbs); // 3.9 * 1.5
     }
 
 
-    [Fact(DisplayName = "Рассчет КБЖУ множества ингредиентов с положительными значениями количества")]
-    public async Task CalculateNutritionAsync_MultipleIngredients_PositiveAmount_CalculatesCorrectly()
+    [Fact(DisplayName = "Рассчет КБЖУ нескольких ингредиентов с положительными значениями количества")]
+    public async Task CalculateNutritionAsync_ManyIngredients_PositiveAmount_CalculatesCorrectly()
     {
         // Arrange
         var product1 = new Product
@@ -87,8 +88,8 @@ public class DishServiceTests
         {
             Ingredients = new List<DishIngredientDto>
             {
-                new DishIngredientDto { ProductId = 1, Amount = 150 },
-                new DishIngredientDto { ProductId = 2, Amount = 100 }
+                new DishIngredientDto { ProductId = 1, Amount = 50 },
+                new DishIngredientDto { ProductId = 2, Amount = 200 }
             }
         };
 
@@ -96,10 +97,10 @@ public class DishServiceTests
         var result = await _dishService.CalculateNutritionAsync(request);
 
         // Assert
-        Assert.Equal(377.5, result.Calories);
-        Assert.Equal(49.2, result.Proteins);
-        Assert.Equal(5.7, result.Fats);
-        Assert.Equal(28, result.Carbs);
+        Assert.Equal(342.5, result.Calories); // 165 * 0.5 + 130 * 2
+        Assert.Equal(20.9, result.Proteins); // 31 * 0.5 + 2.7 * 2
+        Assert.Equal(2.4, result.Fats); // 3.6 * 0.5 + 0.3 * 2
+        Assert.Equal(56, result.Carbs); // 28 * 2
     }
 
 
@@ -133,8 +134,8 @@ public class DishServiceTests
     }
 
 
-    [Fact(DisplayName = "Рассчет КБЖУ множества ингредиентов с отрицательными и положительными значениями количества")]
-    public async Task CalculateNutritionAsync_MultipleIngredients_NegativeAndPositiveAmount_ThrowsArgumentException()
+    [Fact(DisplayName = "Рассчет КБЖУ нескольких ингредиентов с отрицательными и положительными значениями количества")]
+    public async Task CalculateNutritionAsync_ManyIngredients_NegativeAndPositiveAmount_ThrowsArgumentException()
     {
         // Arrange
         var product1 = new Product
@@ -205,7 +206,7 @@ public class DishServiceTests
     }
 
 
-    [Fact(DisplayName = "Рассчет КБЖУ для одного ингредиента c около нулевым положительным значением количества")]
+    [Fact(DisplayName = "Рассчет КБЖУ для одного ингредиента c околонулевым положительным значением количества")]
     public async Task CalculateNutritionAsync_RightZeroAmount_CalculatesCorrectly()
     {
         // Arrange
@@ -213,9 +214,9 @@ public class DishServiceTests
         {
             Id = 1,
             Name = "Tomato",
-            Calories = 18,
+            Calories = 345,
             Proteins = 0.9,
-            Fats = 0.2,
+            Fats = 27,
             Carbs = 3.9
         };
 
@@ -233,13 +234,13 @@ public class DishServiceTests
         var result = await _dishService.CalculateNutritionAsync(request);
 
         // Assert
-        Assert.Equal(0.018, result.Calories, 3);
-        Assert.Equal(0.0009, result.Proteins, 4);
-        Assert.Equal(0.0002, result.Fats, 4);
-        Assert.Equal(0.0039, result.Carbs, 4);
+        Assert.Equal(0.3, result.Calories); // 345 * 0.1 / 100
+        Assert.Equal(0, result.Proteins); // 0.9 * 0.1 / 100
+        Assert.Equal(0, result.Fats); // 27 * 0.1 / 100
+        Assert.Equal(0, result.Carbs); // 3.9 * 0.1 / 100
     }
 
-    [Fact(DisplayName = "Рассчет КБЖУ для одного ингредиента c около нулевым отрицательным значением количества")]
+    [Fact(DisplayName = "Рассчет КБЖУ для одного ингредиента c околонулевым отрицательным значением количества")]
     public async Task CalculateNutritionAsync_LeftZeroAmount_ThrowsArgumentException()
     {
         // Arrange
@@ -283,7 +284,7 @@ public class DishServiceTests
     }
 
 
-    [Fact(DisplayName = "Рассчет КБЖУ для несуществующих ингредиентов")]
+    [Fact(DisplayName = "Рассчет КБЖУ для несуществующего ингредиента")]
     public async Task CalculateNutritionAsync_ProductNotFound_ThrowsArgumentException()
     {
         // Arrange
@@ -302,14 +303,13 @@ public class DishServiceTests
         Assert.Contains("Product 1 not found", exception.Message);
     }
 
-    [Fact(DisplayName = "Рассчет КБЖУ для ингредиента с дробным положительным значением количества")]
+    [Fact(DisplayName = "Рассчет КБЖУ для одного ингредиента с дробным положительным значением количества")]
     public async Task CalculateNutritionAsync_SingleIngredient_FloatPositiveAmounts_CalculatesCorrectly()
     {
         // Arrange
         var product = new Product
         {
             Id = 1,
-            Name = "Sugar",
             Calories = 387,
             Proteins = 0,
             Fats = 0,
@@ -322,7 +322,7 @@ public class DishServiceTests
         {
             Ingredients = new List<DishIngredientDto>
             {
-                new DishIngredientDto { ProductId = 1, Amount = 25.5 }
+                new DishIngredientDto { ProductId = 1, Amount = 75.32 }
             }
         };
 
@@ -330,9 +330,47 @@ public class DishServiceTests
         var result = await _dishService.CalculateNutritionAsync(request);
 
         // Assert
-        Assert.Equal(98.685, result.Calories, 3);
-        Assert.Equal(0, result.Proteins);
-        Assert.Equal(0, result.Fats);
-        Assert.Equal(25.5, result.Carbs);
+        Assert.Equal(291.5, result.Calories); // 387 * 75.32 / 100
+        Assert.Equal(0, result.Proteins); // 
+        Assert.Equal(0, result.Fats); // 
+        Assert.Equal(75.3, result.Carbs); // 
+    }
+
+
+
+    [Theory(DisplayName = "Тест атрибута [ClassData]")]
+    [ClassData(typeof(PositiveAmountTestData))]
+    public async Task CalculateNutritionAsync_MultipleIngredients_ClassDataTest(
+        List<DishIngredient> ingredients, 
+        double expectefCalories, 
+        double expectedProteins, 
+        double expectedFats, 
+        double expectedCarbs
+    ) {
+        // Arrange
+
+        foreach (var ingredient in ingredients)
+        {
+            Product product = ingredient.Product;
+            _mockProductService.Setup(ps => ps.GetProductByIdAsync(product.Id)).ReturnsAsync(product);
+        }
+
+        var data = new NutritionCalculateRequestDto
+        {
+            Ingredients = ingredients.Select(ing => 
+                new DishIngredientDto() { 
+                    ProductId = ing.Product.Id, 
+                    Amount = ing.Amount 
+                }).ToList()
+        };
+
+        // Act
+        var result = await _dishService.CalculateNutritionAsync(data);
+
+        // Assert
+        Assert.Equal(expectefCalories, result.Calories);
+        Assert.Equal(expectedProteins, result.Proteins);
+        Assert.Equal(expectedFats, result.Fats);
+        Assert.Equal(expectedCarbs, result.Carbs);
     }
 }
