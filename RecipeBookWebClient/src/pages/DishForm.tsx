@@ -1,8 +1,8 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useMemo, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { calculateNutritionOnServer, createDish, getDish, getProducts, updateDish } from '../api';
 import { DishIngredientDto, DishCategory, DishFlags, DishFlag, ProductResponse, dishCategories, flagOptions } from '../types';
-import { calculateNutrition, getAllowedDishFlags, parseDishNameMacro, isBjuSumValid, parseFlags, formatFlagLabel } from '../utils';
+import { calculateNutrition, getAllowedDishFlags, parseDishNameMacro, parseFlags, formatFlagLabel } from '../utils';
 import { useToast } from '../components/ToastProvider';
 
 function DishForm() {
@@ -77,9 +77,9 @@ function DishForm() {
       const parsed = parseDishNameMacro(name);
       setCategory(parsed.category || '');
     }
-  }, [name, category]);
+  }, [name]);
 
-  const allowedFlags = getAllowedDishFlags(ingredients, products);
+  const allowedFlags = useMemo(() => getAllowedDishFlags(ingredients, products), [ingredients, products]);
 
   useEffect(() => {
     setSelectedFlags((current) => current.filter((flag) => allowedFlags.includes(flag as DishFlags)));
@@ -209,12 +209,6 @@ function DishForm() {
     }
     if (ingredients.some((item) => item.amount <= 0)) {
       const msg = 'Укажите положительный вес для каждого продукта.';
-      setError(msg);
-      showToast(msg, 'error');
-      return;
-    }
-    if (!isBjuSumValid(proteinsValue, fatsValue, carbsValue)) {
-      const msg = 'Сумма БЖУ не может превышать 100.';
       setError(msg);
       showToast(msg, 'error');
       return;

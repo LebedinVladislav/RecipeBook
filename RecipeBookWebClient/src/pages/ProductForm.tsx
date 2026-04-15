@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createProduct, getProduct, updateProduct } from '../api';
 import { productCategories, cookingOptions, flagOptions, ProductRequest, ProductCategory, CookingRequired, ProductFlag } from '../types';
-import { isBjuSumValid, parseFlags, formatFlagLabel, formatCookingOption } from '../utils';
+import { parseFlags, formatFlagLabel, formatCookingOption } from '../utils';
 import { useToast } from '../components/ToastProvider';
 
 function ProductForm() {
@@ -61,12 +61,6 @@ function ProductForm() {
     const fatsValue = Number(fats) || 0;
     const carbsValue = Number(carbs) || 0;
 
-    if (!isBjuSumValid(proteinsValue, fatsValue, carbsValue)) {
-      const msg = 'Сумма БЖУ на 100 г не может превышать 100.';
-      setError(msg);
-      showToast(msg, 'error');
-      return;
-    }
     if (caloriesValue < 0 || proteinsValue < 0 || fatsValue < 0 || carbsValue < 0) {
       const msg = 'КБЖУ не может быть отрицательным.';
       setError(msg);

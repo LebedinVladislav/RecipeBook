@@ -277,15 +277,8 @@ public class DishService : IDishService
     private static void ValidateDishNutrition(Dish dish)
     {
         var totalNutrition = dish.Proteins + dish.Fats + dish.Carbs;
-        if (totalNutrition / dish.PortionSize * 100 > 100)
-            throw new ArgumentException($"Sum of nutrients per 100 gramm cannot exceed 100.", nameof(dish));
-    }
-
-    private static void ValidatePortionSize(Dish dish)
-    {
-        double totalAmount = dish.Ingredients.Sum(i => i.Amount);
-        if (totalAmount > dish.PortionSize)
-            throw new ArgumentException($"Sum of ingredient amounts ({totalAmount}) cannot exceed portion size ({dish.PortionSize}).", nameof(dish.Ingredients));
+        if (totalNutrition > dish.PortionSize)
+            throw new ArgumentException($"Sum of nutrients cannot exceed portion size.", nameof(dish));
     }
 
     private static (double calories, double proteins, double fats, double carbs) CalculateNutrition(Dish dish)
@@ -305,6 +298,11 @@ public class DishService : IDishService
             totalCarbs += ingredient.Product.Carbs * amount / 100;
         }
 
-        return (totalCalories, totalProteins,totalFats, totalCarbs);
+        return (
+            Math.Round(totalCalories, 1),
+            Math.Round(totalProteins, 1),
+            Math.Round(totalFats, 1),
+            Math.Round(totalCarbs, 1)
+        );
     }
 }
