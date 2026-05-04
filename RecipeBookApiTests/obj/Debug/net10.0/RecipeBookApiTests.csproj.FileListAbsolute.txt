@@ -1,0 +1,6 @@
+d:\VS Code\RecipeBook\RecipeBookApiTests\obj\Debug\net10.0\RecipeBookApiTests.csproj.AssemblyReference.cache
+d:\VS Code\RecipeBook\RecipeBookApiTests\obj\Debug\net10.0\RecipeBookApiTests.GeneratedMSBuildEditorConfig.editorconfig
+d:\VS Code\RecipeBook\RecipeBookApiTests\obj\Debug\net10.0\RecipeBookApiTests.AssemblyInfoInputs.cache
+d:\VS Code\RecipeBook\RecipeBookApiTests\obj\Debug\net10.0\RecipeBookApiTests.AssemblyInfo.cs
+d:\VS Code\RecipeBook\RecipeBookApiTests\obj\Debug\net10.0\RecipeBookApiTests.csproj.CoreCompileInputs.cache
+d:\VS Code\RecipeBook\RecipeBookApiTests\obj\Debug\net10.0\RecipeBookApiTests.sourcelink.json

@@ -1,4 +1,5 @@
 <Solution>
-  <Project Path="RecipeBookWebApi.Tests/RecipeBookWebApi.Tests.csproj" />
+  <Project Path="RecipeBookWebApi.ApiTests/RecipeBookWebApi.ApiTests.csproj" />
+  <Project Path="RecipeBookWebApi.UnitTests/RecipeBookWebApi.UnitTests.csproj" />
   <Project Path="RecipeBookWebApi/RecipeBookWebApi.csproj" />
 </Solution>
