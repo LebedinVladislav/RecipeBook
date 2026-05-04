@@ -12,28 +12,23 @@ namespace RecipeBookWebApi.ApiTests
             _client = client;
         }
 
-        public async Task<HttpResponseMessage> GetAllProducts()
-        {
-            return await _client.GetAsync("api/products");
-        }
-
-        public async Task<HttpResponseMessage> GetProduct(int id)
+        public async Task<HttpResponseMessage> GetProductByIdAsync(int id)
         {
             return await _client.GetAsync($"api/products/{id}");
         }
 
-        public async Task<HttpResponseMessage> GetProducts(string query = "")
+        public async Task<HttpResponseMessage> GetAllProductsAsync(string query = "")
         {
             string url = string.IsNullOrWhiteSpace(query) ? "api/products" : $"api/products?{query}";
             return await _client.GetAsync(url);
         }
 
-        public async Task<HttpResponseMessage> CreateProduct(ProductRequestDto data)
+        public async Task<HttpResponseMessage> CreateProductAsync(ProductRequestDto data)
         {
             return await _client.PostAsJsonAsync("api/products", data);
         }
 
-        public async Task<HttpResponseMessage> DeleteProduct(int id)
+        public async Task<HttpResponseMessage> DeleteProductByIdAsync(int id)
         {
             return await _client.DeleteAsync($"api/products/{id}");
         }

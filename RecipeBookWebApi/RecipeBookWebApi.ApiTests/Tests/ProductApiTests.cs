@@ -1,9 +1,7 @@
-using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using RecipeBookWebApi.ApiTests.ClassData;
 using RecipeBookWebApi.Dto;
 using RecipeBookWebApi.Models;
 
@@ -14,8 +12,7 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
 {
     private readonly ProductApiClient _productApi;
     private readonly DishApiClient _dishApi;
-    private static readonly List<ProductResponseDto> _createdProducts = [];
-    private static readonly List<DishResponseDto> _createdDishes = [];
+    private readonly ApiFixture _fixture;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -23,21 +20,155 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
         Converters = { new JsonStringEnumConverter() }
     };
 
-    internal static async Task DeleteCreatedEntities(HttpClient client)
+    public static TheoryData<ProductRequestDto> ValidProducts => new()
     {
-        ProductApiClient productApi = new ProductApiClient(client);
-        DishApiClient dishApi = new DishApiClient(client);
-        
-        foreach(var product in _createdProducts)
+        // минимальное значение кбжу
+        new ProductRequestDto()
         {
-            await productApi.DeleteProduct(product.Id);
+            Name = "zero",
+            Calories = 0,
+            Proteins = 0,
+            Fats = 0,
+            Carbs = 0,
+            Category = ProductCategory.Крупы,
+            CookingRequired = CookingRequired.ТребуетПриготовления,
+        },
+        // близкое к минимуму значение кбжу      
+        new ProductRequestDto()
+        {
+            Name = "min positive",
+            Calories = 0.01,
+            Proteins = 0.01,
+            Fats = 0.01,
+            Carbs = 0.01,
+            Category = ProductCategory.Крупы,
+            CookingRequired = CookingRequired.ТребуетПриготовления,
+        },
+        // близкое к максимуму значение бжу
+        new ProductRequestDto()
+        {
+            Name = "high values",
+            Calories = 1000,
+            Proteins = 33.33,
+            Fats = 33.33,
+            Carbs = 33.33,
+            Category = ProductCategory.Жидкость,
+            CookingRequired = CookingRequired.ГотовыйКУпотреблению,
+            Flags = ProductFlags.БезГлютена
+        },
+        // разные категории
+        new ProductRequestDto()
+        {
+            Name = "fruit product",
+            Calories = 50,
+            Proteins = 1,
+            Fats = 0.5,
+            Carbs = 12,
+            Category = ProductCategory.Жидкость,
+            CookingRequired = CookingRequired.ГотовыйКУпотреблению,
+            Flags = ProductFlags.Веган | ProductFlags.БезСахара
+        },
+        // разные CookingRequired
+        new ProductRequestDto()
+        {
+            Name = "cooked product",
+            Calories = 200,
+            Proteins = 20,
+            Fats = 15,
+            Carbs = 10,
+            Category = ProductCategory.Крупы,
+            CookingRequired = CookingRequired.ТребуетПриготовления,
+        },
+        // имя с пробелами
+        new ProductRequestDto()
+        {
+            Name = "product with spaces",
+            Calories = 150,
+            Proteins = 5,
+            Fats = 3,
+            Carbs = 20,
+            Category = ProductCategory.Жидкость, 
+            CookingRequired = CookingRequired.ГотовыйКУпотреблению,
+            Flags = ProductFlags.Веган
+        },
+        // все флаги
+        new ProductRequestDto()
+        {
+            Name = "all flags",
+            Calories = 300,
+            Proteins = 25,
+            Fats = 20,
+            Carbs = 30,
+            Category = ProductCategory.Крупы,
+            CookingRequired = CookingRequired.ТребуетПриготовления,
+            Flags = ProductFlags.Веган | ProductFlags.БезГлютена | ProductFlags.БезСахара
+        },
+        // длинное имя
+        new ProductRequestDto()
+        {
+            Name = "very long product name that exceeds normal length to test boundary conditions in the system",
+            Calories = 100,
+            Proteins = 10,
+            Fats = 5,
+            Carbs = 15,
+            Category = ProductCategory.Жидкость,
+            CookingRequired = CookingRequired.ГотовыйКУпотреблению,
         }
+    };
 
-        foreach(var dish in _createdDishes)
+    public static TheoryData<ProductRequestDto, HttpStatusCode> InvalidProductRequests => new()
+    {
         {
-            await dishApi.DeleteDish(dish.Id);
+            new ProductRequestDto
+            {
+                Name = "invalid nutrition",
+                Calories = -10,
+                Proteins = -1,
+                Fats = -1,
+                Carbs = -1,
+                Category = ProductCategory.Крупы,
+                CookingRequired = CookingRequired.ГотовыйКУпотреблению
+            },
+            HttpStatusCode.BadRequest
+        },
+        {
+            new ProductRequestDto
+            {
+                Name = "A",
+                Calories = 10,
+                Proteins = 1,
+                Fats = 1,
+                Carbs = 1,
+                Category = ProductCategory.Крупы,
+                CookingRequired = CookingRequired.ГотовыйКУпотреблению
+            },
+            HttpStatusCode.BadRequest
+        },
+        {
+            new ProductRequestDto
+            {
+                Name = "no category",
+                Calories = 10,
+                Proteins = 1,
+                Fats = 1,
+                Carbs = 1,
+                CookingRequired = CookingRequired.ГотовыйКУпотреблению
+            },
+            HttpStatusCode.BadRequest
+        },
+        {
+            new ProductRequestDto
+            {
+                Name = "no cooking required",
+                Calories = 10,
+                Proteins = 1,
+                Fats = 1,
+                Carbs = 1,
+                Category = ProductCategory.Крупы,
+            },
+            HttpStatusCode.BadRequest
         }
-    }
+    };
 
     private void IsProductsEqual(ProductResponseDto product1, ProductResponseDto product2)
     {
@@ -55,19 +186,20 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
 
     public ProductApiTests(ApiFixture fixture)
     {
+        _fixture = fixture;
         _productApi = new ProductApiClient(fixture.Client);
         _dishApi = new DishApiClient(fixture.Client);
     }
 
     private async Task<ProductResponseDto> CreateProductAsync(ProductRequestDto request)
     {
-        var response = await _productApi.CreateProduct(request);
+        var response = await _productApi.CreateProductAsync(request);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         ProductResponseDto? createdProduct = await response.Content.ReadFromJsonAsync<ProductResponseDto>(JsonOptions);
         Assert.NotNull(createdProduct);
 
-        _createdProducts.Add(createdProduct);
+        _fixture.AddCreatedProduct(createdProduct);
         return createdProduct;
     }
 
@@ -79,13 +211,13 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
         DishResponseDto? createdDish = await response.Content.ReadFromJsonAsync<DishResponseDto>(JsonOptions);
         Assert.NotNull(createdDish);
 
-        _createdDishes.Add(createdDish);
+        _fixture.AddCreatedDish(createdDish);
         return createdDish;
     }
 
     private async Task<List<ProductResponseDto>> GetProductsAsync(string query)
     {
-        var response = await _productApi.GetProducts(query);
+        var response = await _productApi.GetAllProductsAsync(query);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         return await response.Content.ReadFromJsonAsync<List<ProductResponseDto>>(JsonOptions) ?? new List<ProductResponseDto>();
@@ -94,37 +226,28 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
     [Fact(DisplayName = "Получение всех продуктов")]
     public async Task GetAllProducts_ReturnsOK()
     {
-        var response = await _productApi.GetAllProducts();
+        var response = await _productApi.GetAllProductsAsync();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
 
     [Theory(DisplayName = "Создание продукта с валидными данными")]
-    [ClassData(typeof(ValidProductTestData))]
+    [MemberData(nameof(ValidProducts))]
     public async Task CreateProduct_ReturnsProduct(ProductRequestDto requestProduct)
     {
-        var response = await _productApi.CreateProduct(requestProduct);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        
-        ProductResponseDto? responseProduct = await response.Content.ReadFromJsonAsync<ProductResponseDto>(JsonOptions);
-        Assert.NotNull(responseProduct);
-        
-
-        _createdProducts.Add(responseProduct);
+        var createdProduct = await CreateProductAsync(requestProduct);
+        Assert.NotNull(createdProduct);
     }
 
 
     [Theory(DisplayName = "Получение существующего продукта по id")]
-    [ClassData(typeof(ValidProductTestData))]
+    [MemberData(nameof(ValidProducts))]
     public async Task GetProductById_ReturnsProduct(ProductRequestDto product)
     {
-        var response = await _productApi.CreateProduct(product);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-
-        ProductResponseDto? createdProduct = await response.Content.ReadFromJsonAsync<ProductResponseDto>(JsonOptions);
+        var createdProduct = await CreateProductAsync(product);
         Assert.NotNull(createdProduct);
         
-        response = await _productApi.GetProduct(createdProduct.Id);
+        var response = await _productApi.GetProductByIdAsync(createdProduct.Id);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
         ProductResponseDto? responseProduct = await response.Content.ReadFromJsonAsync<ProductResponseDto>(JsonOptions);
@@ -134,16 +257,13 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
 
 
     [Theory(DisplayName = "Удаление существующего продукта по id, который не состоит в блюдах")]
-    [ClassData(typeof(ValidProductTestData))]
+    [MemberData(nameof(ValidProducts))]
     public async Task DeleteProductById_ReturnsProduct(ProductRequestDto requestProduct)
     {
-        var response = await _productApi.CreateProduct(requestProduct);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-
-        ProductResponseDto? createdProduct = await response.Content.ReadFromJsonAsync<ProductResponseDto>(JsonOptions);
+        var createdProduct = await CreateProductAsync(requestProduct);
         Assert.NotNull(createdProduct);
 
-        response = await _productApi.DeleteProduct(createdProduct.Id);
+        var response = await _productApi.DeleteProductByIdAsync(createdProduct.Id);
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
@@ -245,91 +365,25 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
         Assert.True(products[0].Flags.HasFlag(ProductFlags.Веган));
     }
 
-    [Fact(DisplayName = "Создание продукта с отрицательным кбжу возвращает 400")]
-    public async Task CreateProduct_WithNegativeNutrition_ReturnsBadRequest()
+    [Theory(DisplayName = "Создание продукта с невалидными данными возвращает ошибку")]
+    [MemberData(nameof(InvalidProductRequests))]
+    public async Task CreateProduct_InvalidData_ReturnsError(ProductRequestDto request, HttpStatusCode expectedStatus)
     {
-        var request = new ProductRequestDto
-        {
-            Name = "invalid nutrition",
-            Calories = -10,
-            Proteins = -1,
-            Fats = -1,
-            Carbs = -1,
-            Category = ProductCategory.Крупы,
-            CookingRequired = CookingRequired.ГотовыйКУпотреблению
-        };
-
-        var response = await _productApi.CreateProduct(request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact(DisplayName = "Создание продукта с именем короче двух символов возвращает 400")]
-    public async Task CreateProduct_WithShortName_ReturnsBadRequest()
-    {
-        var request = new ProductRequestDto
-        {
-            Name = "A",
-            Calories = 10,
-            Proteins = 1,
-            Fats = 1,
-            Carbs = 1,
-            Category = ProductCategory.Крупы,
-            CookingRequired = CookingRequired.ГотовыйКУпотреблению
-        };
-
-        var response = await _productApi.CreateProduct(request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact(DisplayName = "Создание продукта без указания категории возвращает 400")]
-    public async Task CreateProduct_WithoutCategory_ReturnsBadRequest()
-    {
-        var request = new ProductRequestDto
-        {
-            Name = "no category",
-            Calories = 10,
-            Proteins = 1,
-            Fats = 1,
-            Carbs = 1,
-            CookingRequired = CookingRequired.ГотовыйКУпотреблению
-        };
-
-        var response = await _productApi.CreateProduct(request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact(DisplayName = "Создание продукта без указания обязательности готовки возвращает 400")]
-    public async Task CreateProduct_WithoutCookingRequired_ReturnsBadRequest()
-    {
-        var request = new ProductRequestDto
-        {
-            Name = "no cooking required",
-            Calories = 10,
-            Proteins = 1,
-            Fats = 1,
-            Carbs = 1,
-            Category = ProductCategory.Крупы,
-        };
-
-        var response = await _productApi.CreateProduct(request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var response = await _productApi.CreateProductAsync(request);
+        Assert.Equal(expectedStatus, response.StatusCode);
     }
 
     [Fact(DisplayName = "Получение несуществующего продукта возвращает 404")]
     public async Task GetProduct_NonExisting_ReturnsNotFound()
     {
-        var response = await _productApi.GetProduct(int.MaxValue);
+        var response = await _productApi.GetProductByIdAsync(int.MaxValue);
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact(DisplayName = "Удаление несуществующего продукта возвращает 404")]
     public async Task DeleteProduct_NonExisting_ReturnsNotFound()
     {
-        var response = await _productApi.DeleteProduct(int.MaxValue);
+        var response = await _productApi.DeleteProductByIdAsync(int.MaxValue);
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -362,7 +416,7 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
             Category = DishCategory.Первое
         });
 
-        var response = await _productApi.DeleteProduct(product.Id);
+        var response = await _productApi.DeleteProductByIdAsync(product.Id);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

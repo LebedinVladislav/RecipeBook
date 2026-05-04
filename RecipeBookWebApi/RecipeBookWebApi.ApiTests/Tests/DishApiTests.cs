@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using RecipeBookWebApi.ApiTests.ClassData;
 using RecipeBookWebApi.Dto;
 
 namespace RecipeBookWebApi.ApiTests.Tests;
@@ -28,7 +27,7 @@ public partial class DishApiTests : IClassFixture<ApiFixture>
         
         foreach(var product in _createdProducts)
         {
-            await productApi.DeleteProduct(product.Id);
+            await productApi.DeleteProductByIdAsync(product.Id);
         }
 
         foreach(var dish in _createdDishes)
