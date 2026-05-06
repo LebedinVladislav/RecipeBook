@@ -170,7 +170,7 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
         }
     };
 
-    private void IsProductsEqual(ProductResponseDto product1, ProductResponseDto product2)
+    private void AssertProductsEqual(ProductResponseDto product1, ProductResponseDto product2)
     {
         Assert.Equal(product1.Name, product2.Name);
         Assert.Equal(product1.Photos, product2.Photos);
@@ -252,7 +252,7 @@ public partial class ProductApiTests : IClassFixture<ApiFixture>
         
         ProductResponseDto? responseProduct = await response.Content.ReadFromJsonAsync<ProductResponseDto>(JsonOptions);
         Assert.NotNull(responseProduct);
-        IsProductsEqual(responseProduct, createdProduct);
+        AssertProductsEqual(responseProduct, createdProduct);
     }
 
 
