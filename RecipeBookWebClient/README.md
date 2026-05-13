@@ -24,6 +24,7 @@ npm run build
 
 ```bash
 npm run test
+npm run test:e2e
 ```
 
 ## Структура
